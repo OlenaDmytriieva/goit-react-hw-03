@@ -1,33 +1,58 @@
-// import { Profile, FriendList, Section, Container, Heading } from "components";
-import { Profile } from "./components/Profile/Profile";
-import { FriendList } from "./components/FriendList/FriendList";
+import ContactForm from "./components/ContactForm/ContactForm";
 import { Container } from "./components/Container/Container";
-import { Heading } from "./components/Heading/Heading";
 import { Section } from "./components/Section/Section";
-import userData from "./data/userData.json";
-import friends from "./data/friends.json";
-import transactions from "./data/transactions.json";
-import { TransactionHistory } from "./components/TransactionHistory/TransactionHistory";
+import ContactList from "./components/ContactList/ContactList";
+import SearchBox from "./components/SearchBox/SearchBox";
+// import contactsData from "./data/contacts.json";
+import { useState, useEffect } from "react";
 
-export const App = () => {
+export default function App() {
+  const [contacts, setContacts] = useState(() => {
+    const storedContacts = JSON.parse(localStorage.getItem("contacts"));
+    return storedContacts || [];
+  });
+
+  const [filter, setFilter] = useState("");
+
+  const addContact = (newContact) => {
+    setContacts((prevContacts) => {
+      const updatedContacts = [...prevContacts, newContact];
+      localStorage.setItem("contacts", JSON.stringify(updatedContacts));
+      return updatedContacts;
+    });
+  };
+
+  const deleteContact = (contactId) => {
+    setContacts((prevContacts) => {
+      const updatedContacts = prevContacts.filter(
+        (contact) => contact.id !== contactId
+      );
+      localStorage.setItem("contacts", JSON.stringify(updatedContacts));
+      return updatedContacts;
+    });
+  };
+
+  useEffect(() => {
+    const storedContacts = JSON.parse(localStorage.getItem("contacts"));
+    if (storedContacts) {
+      setContacts(storedContacts);
+    }
+  }, []);
+
+  const visibleContacts = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
+
   return (
     <Section>
       <Container>
-        <Heading title="Task 1 Profile" bottom />
-        <Profile
-          name={userData.username}
-          tag={userData.tag}
-          location={userData.location}
-          image={userData.avatar}
-          stats={userData.stats}
-        />
-
-        <Heading title="Task 2 List of friends" top bottom />
-        <FriendList friends={friends} />
-
-        <Heading title="Task 3 Transactions' history" top bottom />
-        <TransactionHistory items={transactions} />
+        <div>
+          <h1>Phonebook</h1>
+          <ContactForm onAdd={addContact} />
+          <SearchBox value={filter} onFilter={setFilter} />
+          <ContactList contacts={visibleContacts} onDelete={deleteContact} />
+        </div>
       </Container>
     </Section>
   );
-};
+}
